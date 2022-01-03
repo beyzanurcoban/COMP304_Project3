@@ -1,5 +1,9 @@
 /**
- * part1.c 
+ * part1.c
+ * 
+ * Contributors:
+ * Beyzanur Coban
+ * Kerem Girenes
  */
 
 #include <stdio.h>
@@ -12,11 +16,11 @@
 
 #define TLB_SIZE 16
 #define PAGES 1024
-#define PAGE_MASK /* TODO */
+#define PAGE_MASK 1023 // Binary mask: 1111111111
 
 #define PAGE_SIZE 1024
 #define OFFSET_BITS 10
-#define OFFSET_MASK /* TODO */
+#define OFFSET_MASK 1023 // Binary mask: 1111111111
 
 #define MEMORY_SIZE PAGES * PAGE_SIZE
 
@@ -94,7 +98,7 @@ int main(int argc, const char *argv[])
     int logical_address = atoi(buffer);
 
     /* TODO 
-    / Calculate the page offset and logical page number from logical_address */
+    // Calculate the page offset and logical page number from logical_address
     int offset =
     int logical_page =
     ///////
@@ -109,7 +113,7 @@ int main(int argc, const char *argv[])
       
       // Page fault
       if (physical_page == -1) {
-          /* TODO */
+          // TODO
       }
 
       add_to_tlb(logical_page, physical_page);
@@ -119,6 +123,7 @@ int main(int argc, const char *argv[])
     signed char value = main_memory[physical_page * PAGE_SIZE + offset];
     
     printf("Virtual address: %d Physical address: %d Value: %d\n", logical_address, physical_address, value);
+    */
   }
   
   printf("Number of Translated Addresses = %d\n", total_addresses);
