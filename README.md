@@ -10,6 +10,7 @@ Kerem Girenes
 
 Use the following command to compile the program. 
 
+### Part 1:
 ```bash
 gcc part1.c -o part1
 ```
@@ -18,6 +19,8 @@ gcc part1.c -o part1
 
 Use the following command to execute the program. The first argument will represent the disk that we look up for the
 page faults. The second argument will be the address list that we want to reach and find the corresponding physical memory location.
+
+### Part 1:
 ```bash
 ./part1 BACKING_STORE.bin addresses.txt
 ```
