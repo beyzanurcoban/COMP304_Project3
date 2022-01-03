@@ -55,6 +55,7 @@ int max(int a, int b)
 /* Returns the physical address from TLB or -1 if not present. */
 int search_tlb(unsigned char logical_page) {
     /* TODO */
+    return -1;
 }
 
 /* Adds the specified mapping to the TLB, replacing the oldest mapping (FIFO replacement). */
@@ -95,15 +96,19 @@ int main(int argc, const char *argv[])
   
   while (fgets(buffer, BUFFER_SIZE, input_fp) != NULL) {
     total_addresses++;
-    int logical_address = atoi(buffer);
+    int logical_address = atoi(buffer); // int value we read from addresses.txt
 
-    /* TODO 
     // Calculate the page offset and logical page number from logical_address
-    int offset =
-    int logical_page =
+    /* Offset bits are the 10 rightmost bits. To obtain them, we apply AND operation
+      * with 10 bits 1. */
+    int offset = logical_address & OFFSET_MASK;
+    /* The bits that represent the page number are the bits between 10-19. So, we need to
+      * shift right the logical address OFFSET_BITS many bits. Then apply AND operation. */
+    int logical_page = (logical_address >> OFFSET_BITS) & PAGE_MASK;
     ///////
     
     int physical_page = search_tlb(logical_page);
+
     // TLB hit
     if (physical_page != -1) {
       tlb_hits++;
@@ -113,17 +118,34 @@ int main(int argc, const char *argv[])
       
       // Page fault
       if (physical_page == -1) {
-          // TODO
+        // Assign a physical page number
+        physical_page = free_page;
+        // Enter the page table information
+        pagetable[logical_page] = physical_page;
+        // Increment the available physical page number for the next coming pages
+        free_page++;
+
+        // Pointer to the start of the corresponding physical page
+        signed char *physical_frame_content = main_memory + (physical_page * PAGE_SIZE);
+
+        // Pointer to the start of the corresponding physical page in the backing store
+        signed char *backing_store_content = backing + (logical_page * PAGE_SIZE);
+
+        // Copy the page content from backing store to physical memory
+        memcpy(physical_frame_content, backing_store_content, PAGE_SIZE);
+
+        // Increment the number of page faults
+        page_faults++;
       }
 
-      add_to_tlb(logical_page, physical_page);
+      //add_to_tlb(logical_page, physical_page);
     }
     
     int physical_address = (physical_page << OFFSET_BITS) | offset;
     signed char value = main_memory[physical_page * PAGE_SIZE + offset];
     
     printf("Virtual address: %d Physical address: %d Value: %d\n", logical_address, physical_address, value);
-    */
+    
   }
   
   printf("Number of Translated Addresses = %d\n", total_addresses);
