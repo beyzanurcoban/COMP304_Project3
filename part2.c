@@ -1,5 +1,9 @@
 /**
  * part2.c 
+ * 
+ * Contributors:
+ * Beyzanur Coban
+ * Kerem Girenes
  */
 
 #include <stdio.h>
