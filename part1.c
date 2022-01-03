@@ -54,13 +54,25 @@ int max(int a, int b)
 
 /* Returns the physical address from TLB or -1 if not present. */
 int search_tlb(unsigned char logical_page) {
-    /* TODO */
-    return -1;
+  int tlbValue = -1; // Initially, we assumed that there is no such entry
+
+  for(int i=0; i<TLB_SIZE; i++){ // Traverse the whole TLB table
+    if(tlb[i].logical == logical_page){ // If you find the corresponding virtual page number
+      tlbValue = tlb[i].physical; // Return the corresponding physical page number
+    }
+  }    
+
+  return tlbValue;
 }
 
 /* Adds the specified mapping to the TLB, replacing the oldest mapping (FIFO replacement). */
 void add_to_tlb(unsigned char logical, unsigned char physical) {
-    /* TODO */
+  int index = tlbindex % TLB_SIZE; // Use circular indexing
+
+  tlb[index].logical = logical;
+  tlb[index].physical = physical;
+
+  tlbindex++;
 }
 
 int main(int argc, const char *argv[])
@@ -138,10 +150,10 @@ int main(int argc, const char *argv[])
         page_faults++;
       }
 
-      //add_to_tlb(logical_page, physical_page);
+      add_to_tlb(logical_page, physical_page);
     }
     
-    int physical_address = (physical_page << OFFSET_BITS) | offset;
+    int physical_address = (physical_page << OFFSET_BITS) | offset; 
     signed char value = main_memory[physical_page * PAGE_SIZE + offset];
     
     printf("Virtual address: %d Physical address: %d Value: %d\n", logical_address, physical_address, value);
