@@ -78,7 +78,7 @@ void add_to_tlb(unsigned char logical, unsigned char physical) {
 int main(int argc, const char *argv[])
 {
   if (argc != 3) {
-    fprintf(stderr, "Usage ./virtmem backingstore input\n");
+    fprintf(stderr, "Usage ./part1 backingstore input\n");
     exit(1);
   }
   
