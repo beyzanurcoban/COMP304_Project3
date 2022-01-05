@@ -180,12 +180,13 @@ int main(int argc, const char *argv[])
             if(PAGE_FRAME_REG[lru_index] > PAGE_FRAME_REG[reg]) {
               lru_index = reg;
             }
-
-            free_page = lru_index;
-
-            clock++;
-            PAGE_FRAME_REG[physical_page] = clock;
           }
+
+          free_page = lru_index;
+
+          clock++;
+          PAGE_FRAME_REG[physical_page] = clock;
+          
         } else {
           // FIFO
           free_page = (free_page + 1) % PAGE_FRAME_COUNT;
