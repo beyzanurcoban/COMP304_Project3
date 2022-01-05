@@ -175,6 +175,8 @@ int main(int argc, const char *argv[])
         // Ready another free page, LRU or FIFO
         if (LRU_selected) {
           // LRU
+
+          // Find Least Recently Used Page Frame in the Register
           int reg;
           for(reg = 0; reg < PAGE_FRAME_COUNT; reg++) {
             if(PAGE_FRAME_REG[lru_index] > PAGE_FRAME_REG[reg]) {
@@ -182,18 +184,19 @@ int main(int argc, const char *argv[])
             }
           }
 
+          // Assign next free page as this frame
           free_page = lru_index;
 
+          // Keep LRU Register updated
           clock++;
           PAGE_FRAME_REG[physical_page] = clock;
-          
+
         } else {
           // FIFO
+
+          // Go to the next frame and assign it as the new free page
           free_page = (free_page + 1) % PAGE_FRAME_COUNT;
 
-          for(int i=0; i<PAGES; i++) {
-            if(pagetable[i] == physical_page) pagetable[i]--;
-          }
         }
 
         FILE* file = fopen(backing_filename, "rb");
