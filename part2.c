@@ -79,15 +79,20 @@ int search_tlb(unsigned char logical_page) {
   return tlbValue;
 }
 
-/* Adds the specified mapping to the TLB, replacing the oldest mapping (FIFO replacement). */
+/* Adds the specified mapping to the TLB. */
 void add_to_tlb(unsigned char logical, unsigned char physical) {
   int index = -1;
 
   if(LRU_selected){
-    tlbindex = tlbindex % TLB_SIZE;
+    int reg;
+    for(reg = 1; reg < PAGE_FRAME_COUNT; reg++) {
+      if(PAGE_FRAME_REG[tlbindex] > PAGE_FRAME_REG[reg]) {
+        tlbindex = reg;
+      }
+    }
+    
     tlb[tlbindex].logical = logical;
     tlb[tlbindex].physical = physical;
-    tlbindex++;
   } else {
     if(tlbindex < TLB_SIZE){
       tlb[tlbindex].logical = logical;
