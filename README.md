@@ -30,14 +30,14 @@ page faults. The second argument will be the address list that we want to reach 
 ./part1 BACKING_STORE.bin addresses.txt
 ```
 
-### Part 2 LRU:
-```bash
-./part1 BACKING_STORE.bin addresses.txt -p 1
-```
-
 ### Part 2 FIFO:
 ```bash
-./part1 BACKING_STORE.bin addresses.txt -p 0
+./part2 BACKING_STORE.bin addresses.txt -p 0
+```
+
+### Part 2 LRU:
+```bash
+./part2 BACKING_STORE.bin addresses.txt -p 1
 ```
 
 ## Working Parts
