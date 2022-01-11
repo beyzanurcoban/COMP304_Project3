@@ -22,7 +22,7 @@
 #define OFFSET_BITS 10
 #define OFFSET_MASK 1023 // Binary mask: 1111111111
 
-#define MEMORY_SIZE PAGES * PAGE_SIZE
+#define MEMORY_SIZE PAGE_FRAME_COUNT * PAGE_SIZE
 
 // Part II Page Frame Count for Physical Memory
 #define PAGE_FRAME_COUNT 256
@@ -55,6 +55,10 @@ int clock = 0;
 // Contains the last time a particular page was accessed
 int PAGE_FRAME_REG[PAGE_FRAME_COUNT];
 
+int TLB_AGES[TLB_SIZE];
+
+int LRU_selected = -1;
+
 int max(int a, int b)
 {
   if (a > b)
@@ -75,14 +79,35 @@ int search_tlb(unsigned char logical_page) {
   return tlbValue;
 }
 
-/* Adds the specified mapping to the TLB, replacing the oldest mapping (FIFO replacement). */
+/* Adds the specified mapping to the TLB. */
 void add_to_tlb(unsigned char logical, unsigned char physical) {
-  int index = tlbindex % TLB_SIZE; // Use circular indexing
+  int index = -1;
 
-  tlb[index].logical = logical;
-  tlb[index].physical = physical;
+  if(LRU_selected){
+    int reg;
+    for(reg = 1; reg < PAGE_FRAME_COUNT; reg++) {
+      if(PAGE_FRAME_REG[tlbindex] > PAGE_FRAME_REG[reg]) {
+        tlbindex = reg;
+      }
+    }
+    
+    tlb[tlbindex].logical = logical;
+    tlb[tlbindex].physical = physical;
+  } else {
+    if(tlbindex < TLB_SIZE){
+      tlb[tlbindex].logical = logical;
+      tlb[tlbindex].physical = physical;
+      tlbindex++;
+    } else {
+      tlb[tlbindex-1].logical = logical;
+      tlb[tlbindex-1].physical = physical;
 
-  tlbindex++;
+      for(int i=0; i<TLB_SIZE-1; i++){
+        tlb[i].logical = tlb[i+1].logical;
+        tlb[i].physical = tlb[i+1].physical;
+      }
+    }
+  }
 }
 
 int main(int argc, const char *argv[])
@@ -92,11 +117,11 @@ int main(int argc, const char *argv[])
     exit(1);
   }
 
-  /*char *flag = argv[3];
+  const char *flag = argv[3];
   if(strcmp(flag, "-p") != 0) {
     fprintf(stderr, "Wrong flag supplied!\n");
     exit(1);
-  }*/
+  }
   
   const char *backing_filename = argv[1]; 
   int backing_fd = open(backing_filename, O_RDONLY);
@@ -106,7 +131,7 @@ int main(int argc, const char *argv[])
   FILE *input_fp = fopen(input_filename, "r");
 
   // LRU = 1, FIFO = 0
-  int LRU_selected = atoi(argv[4]);
+  LRU_selected = atoi(argv[4]);
 
   if(LRU_selected) printf("LRU Mode Selected\n");
   else printf("FIFO Mode Selected\n");
@@ -115,6 +140,11 @@ int main(int argc, const char *argv[])
   int reg_index;
   for(reg_index = 0; reg_index < PAGE_FRAME_COUNT; reg_index++){
     PAGE_FRAME_REG[reg_index] = 0;
+  }
+
+  // Initialize TLB entry ages
+  for(int i=0; i<TLB_SIZE; i++){
+    TLB_AGES[i] = 0;
   }
   
   // Fill page table entries with -1 for initially empty table.
@@ -131,7 +161,7 @@ int main(int argc, const char *argv[])
   int tlb_hits = 0;
   int page_faults = 0;
   
-  // Number of the next unallocated physical page in main memory
+  // Index of the next unallocated physical page in main memory
   unsigned char free_page = 0;
 
   // LRU Least Recently Used Page Index
@@ -169,16 +199,13 @@ int main(int argc, const char *argv[])
         /* TODO */
         page_faults++;
 
-        // Assign current free page to physical page
-        physical_page = free_page;
-
         // Ready another free page, LRU or FIFO
         if (LRU_selected) {
           // LRU
 
           // Find Least Recently Used Page Frame in the Register
           int reg;
-          for(reg = 0; reg < PAGE_FRAME_COUNT; reg++) {
+          for(reg = 1; reg < PAGE_FRAME_COUNT; reg++) {
             if(PAGE_FRAME_REG[lru_index] > PAGE_FRAME_REG[reg]) {
               lru_index = reg;
             }
@@ -186,10 +213,6 @@ int main(int argc, const char *argv[])
 
           // Assign next free page as this frame
           free_page = lru_index;
-
-          // Keep LRU Register updated
-          clock++;
-          PAGE_FRAME_REG[physical_page] = clock;
 
         } else {
           // FIFO
@@ -199,11 +222,29 @@ int main(int argc, const char *argv[])
 
         }
 
-        FILE* file = fopen(backing_filename, "rb");
-        memcpy(main_memory + (physical_page * PAGE_SIZE), backing + (logical_page * PAGE_SIZE), PAGE_SIZE);
+        for(int i=0; i<PAGES; i++){
+          if(pagetable[i] == free_page){
+            pagetable[i] = -1;
+          }
+        }
 
+        // Assign a physical page number
+        physical_page = free_page;
+        // Enter the page table information
         pagetable[logical_page] = physical_page;
-        fclose(file);
+
+        memcpy(main_memory + (physical_page * PAGE_SIZE), backing + (physical_page * PAGE_SIZE), PAGE_SIZE);
+
+        if(LRU_selected){
+          clock++;
+          PAGE_FRAME_REG[physical_page] = clock;
+        }
+
+      } else {
+        if(LRU_selected){
+          clock++;
+          PAGE_FRAME_REG[physical_page] = clock;
+        }
       }
 
       add_to_tlb(logical_page, physical_page);
@@ -213,6 +254,7 @@ int main(int argc, const char *argv[])
     signed char value = main_memory[physical_page * PAGE_SIZE + offset];
     
     printf("Virtual address: %d Physical address: %d Value: %d\n", logical_address, physical_address, value);
+    lru_index = 0;
   }
   
   printf("Number of Translated Addresses = %d\n", total_addresses);
