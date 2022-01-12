@@ -42,5 +42,5 @@ page faults. The second argument will be the address list that we want to reach 
 
 ## Working Parts
 
-We implemented the both parts of the project. If you give the valid command line arguments, then it will produce an\
+We implemented the both parts of the project. If you give the valid command line arguments, then it will produce an
 output. There is no error or segmentation fault in the code. 
